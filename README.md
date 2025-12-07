@@ -1,11 +1,12 @@
 
 ### Installation
 
+```
 conda env create -f */environment.yaml
 conda activate Nanopore_apogee
 
 chmod +x */APOGEE.sh
-
+```
 ### Usage
 
 ```

@@ -10,8 +10,17 @@ chmod +x */APOGEE.sh
 ### Usage
 
 ```
-APOGEE.sh fastq_folder target_list_file output_dir
-[--length] [--maxlength] [-q] [--min_total_reads] [--min_abund] [--control] [--gene]
+/minimap2_v02.sh \
+ -i /media/herve/10TB/Apogee/6_mock/6_minimap2/reads \
+ -o /media/herve/10TB/Apogee/6_mock/11_minimap2_clustered \
+ -r /media/herve/10TB/Apogee/6_mock/6_minimap2/ITS-RefDB_V02.mmi \
+ -s /media/herve/10TB/Apogee/6_mock/6_minimap2 \
+ -t 32 \
+ -c true \
+ -x 0.98 \
+ -T /media/herve/10TB/Apogee/6_mock/6_minimap2/taxonomy.tsv \
+ -F /media/herve/10TB/Apogee/5_Scripts/filter_with_confidence.py \
+ -C 1
 ```
 ```
   -i input_dir 
@@ -26,9 +35,9 @@ APOGEE.sh fastq_folder target_list_file output_dir
    -F  filter_script
    -C  confidence
 ```
-```
-Arguments:
 
+### Arguments:
+```
   -i         Directory containing input FASTQ files to analyze
   -o    CSV file containing target sequences with their metadata
   -r            Output directory for results and visualization files

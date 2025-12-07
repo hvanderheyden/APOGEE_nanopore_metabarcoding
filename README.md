@@ -13,6 +13,7 @@ chmod +x */APOGEE.sh
 APOGEE.sh fastq_folder target_list_file output_dir
 [--length] [--maxlength] [-q] [--min_total_reads] [--min_abund] [--control] [--gene]
 ```
+```
   -i input_dir 
    -o  output_dir
    -r  ref_db
@@ -24,6 +25,7 @@ APOGEE.sh fastq_folder target_list_file output_dir
    -T  taxonomy_db
    -F  filter_script
    -C  confidence
+```
 ```
 Arguments:
 

@@ -8,7 +8,7 @@ def parse_arguments():
     parser = ArgumentParser(description="Generate phyloseq taxonomy table from OTU table and taxonomy database")
     parser.add_argument('-i', '--input', dest='otu_file', required=True,
                         help='Path to OTU table (CSV format)')
-    parser.add_argument('-t', '--taxonomy', dest='tax_file', required=True,
+    parser.add_argument('-T', '--taxonomy', dest='tax_file', required=True,
                         help='Path to taxonomy database (TSV format: ID\\ttaxonomy_string)')
     parser.add_argument('-C', '--confidence', dest='min_conf', type=float, default=1.0,
                         help='Minimum mapping confidence threshold (0-1, default: 1.0)')

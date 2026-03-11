@@ -100,15 +100,6 @@ conda activate Apogee-pipeline
      Identity threshold for filtering (0.0-1.0, default: 0.0)
 ```
 
-### OUTPUT FILES
-```
-  otu_table.csv
-    Format: Accession,sample1,sample2,...,TotalCount,MappingConfidence
-
-  taxonomy_table.csv
-    Format: #OTU ID,Domain,Phylum,Class,Order,Family,Genus,Species
-```
-
 ## OUTPUT FILES
 
 The pipeline generates the following output files in the specified output directory:
@@ -124,3 +115,4 @@ Intermediate files are organized in subdirectories:
 - `chimera/` - Chimera-filtered FASTA files
 - `mapped/` - PAF mapping files
 - `filteredPAFs/` - Filtered OTU table (TSV format)
+

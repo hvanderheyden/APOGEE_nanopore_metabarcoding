@@ -10,7 +10,7 @@ from collections import defaultdict
 
 parser = argparse.ArgumentParser(description='Filter OTU table with confidence level')
 parser.add_argument('-i', '--paf_folder', required=True, help='Input PAF folder')
-parser.add_argument('-t', '--taxonomy', default='/media/herve/10TB/Apogee/1_data_base/minimap/taxonomy.tsv', help='Taxonomy database')
+parser.add_argument('-T', '--taxonomy', default='/media/herve/10TB/Apogee/1_data_base/minimap/taxonomy.tsv', help='Taxonomy database')
 parser.add_argument('-o', '--output_file', required=True, help='Output OTU table')
 parser.add_argument('-C', '--conf', type=float, default=0.5, help='Min MappingConfidence')
 parser.add_argument('-v', '--qcov', type=float, default=0.7, help='Min query coverage')

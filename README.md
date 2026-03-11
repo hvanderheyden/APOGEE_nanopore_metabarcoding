@@ -91,7 +91,7 @@ conda activate Apogee-pipeline
      Word length for clustering k-mer matching (default: 10)
 
 -C <confidence>
-     Mapping confidence threshold for filtering (0.0-1.0, default: 1.0)
+     Mapping confidence threshold for filtering (0.0-1.0, default: 0.3)
 
 -v <query_coverage>
      Query coverage threshold for filtering (0.0-1.0, default: 0.0)

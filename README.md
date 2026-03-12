@@ -118,6 +118,6 @@ Intermediate files are organized in subdirectories:
 - `mapped/` - PAF mapping files
 - `filteredPAFs/` - Filtered OTU table (TSV format)
 
-## to do
+## To do
  
 Porechop is no longer supported, and with the latest version of Nanopore's [Dorado](https://github.com/nanoporetech/dorado/) basecalling tool, this trimming step is no longer necessary. In the next version, the trimming step using Porechop may become optional or be replaced by the dorado trim subcommand. 

@@ -5,10 +5,8 @@
 APOGEE V04 is an enhanced version of V03 with advanced LCA (Lowest Common Ancestor) filtering and OTU collapsing functionality.
 
 ### Major Changes from V03:
-- **Advanced LCA Filtering**: Replaces simple confidence-based filtering with sophisticated LCA strategies (strict, majority-rule, weighted)
+- **Advanced LCA Filtering**: Replaces simple confidence-based filtering with LCA strategies (strict, majority-rule, weighted, and boostrap)
 - **OTU Collapsing & Species Summary**: New step to collapse OTU by complete taxonomic classification and generate species-level abundance tables
-- **Bug Fix**: Resolves OTU ID collision where collapsed OTU are now prefixed as COTU_ (distinct from filtered OTU_)
-- **Improved Taxonomy Resolution**: Multiple strategies for handling taxonomic conflicts in read assignments
 
 The pipeline takes Nanopore fastq files (post-basecalling) and processes them into species-level abundance tables ready for import into R or other statistical analysis software.
 
@@ -142,7 +140,7 @@ conda activate Apogee-pipeline
 
 ## DIFFERENCES WITH V03
 
-### 1. Advanced LCA (Lowest Common Ancestor) Filtering (Major Change)
+### 1. Advanced LCA (Lowest Common Ancestor) Filtering
 **V03**: Used simple confidence-based filtering with single LCA strategy
 ```
 V03 filtering criteria:
@@ -151,7 +149,7 @@ V03 filtering criteria:
 - Identity >= 0.0 (no filtering by default)
 ```
 
-**V04**: Implements sophisticated LCA strategies with multiple resolution methods
+**V04**: Implements LCA strategies with multiple resolution methods
 ```
 V04 LCA strategies (-L parameter):
 - strict: Stops at first disagreement in taxonomy (most conservative)
@@ -159,9 +157,6 @@ V04 LCA strategies (-L parameter):
 - weighted: Uses weighted voting based on confidence scores (more permissive)
 - bootstrap: Resamples alignments to calculate taxonomy support + confidence (most robust)
 ```
-
-**Impact**: Better handling of multi-mapping reads that align to multiple species. Previous version could arbitrarily assign reads; V04 chooses based on explicit LCA resolution strategy with confidence metrics.
-
 
 ## LCA (Lowest Common Ancestor) STRATEGIES EXPLAINED
 
@@ -196,22 +191,14 @@ When a read aligns to multiple species in the reference database, LCA determines
 ## 2. OTU Collapsing & Species-Level Summary (New Feature)
 **V03**: Stopped at OTU level - no collapsing or species-level aggregation
 **V04**: New 2-step aggregation:
-1. **Step 8b (collapse_otu_by_taxonomy.py)**: Collapses 2.2M+ OTU → ~600 unique taxonomic profiles (COTU_)
+1. **Step 8b (collapse_otu_by_taxonomy.py)**: Collapses OTU → unique taxonomic profiles (COTU_)
 2. **Step 8c (generate_species_proportions.py)**: Aggregates COTU → species level, generates summary.csv
 
 **Output difference**:
 - V03: `otu_table.csv`, `phyloseq_taxonomy.csv` (no species-level summary)
 - V04: `collapsed_otu_table.csv`, `collapsed_taxonomy.csv`, **`summary.csv`** (species-level abundances)
 
-### 3. OTU ID Naming (Bug Fix)
-**V03**: Collapsed OTU named `OTU_1` through `OTU_570`
-- Problem: Collision with filtered OTU IDs in taxonomy file → wrong species assignment
-
-**V04**: Collapsed OTU named `COTU_1` through `COTU_570`  
-- Solution: Unique prefix prevents ID collision
-- Impact: Species abundances now mathematically correct
-
-### 4. New Required Scripts
+### 3. New Required Scripts
 **V03**: `filter_with_confidence.py`
 **V04**: 
 - `filter_with_advanced_lca.py` (replaces filter_with_confidence.py - uses LCA strategies)
@@ -228,7 +215,7 @@ The pipeline generates the following output files in the specified output direct
 - **collapsed_otu_table.csv** - Collapsed OTU table with COTU_ prefixed IDs and aggregated abundances
 - **collapsed_taxonomy.csv** - Taxonomy assignments for collapsed OTU
 
-### Intermediate Files (organized in subdirectories)
+### Intermediate Files
 - `porechop/` - Adapter-removed FASTQ files
 - `trimmed/` - Primer-trimmed FASTQ files (if enabled)
 - `nanofilt/` - Quality and length filtered FASTQ files
@@ -240,7 +227,7 @@ The pipeline generates the following output files in the specified output direct
 
 ## EXAMPLE USAGE
 
-### Default Parameters (Recommended)
+### Default Parameters
 ```commandline
 /path/to/APOGEE_V04.sh \
   -i /path/to/fastq/files \
@@ -263,19 +250,6 @@ The pipeline generates the following output files in the specified output direct
 - `-k 0.9` - Identity threshold
 - `-L strict` - Use strict LCA strategy (recommended for most cases)
 
-
-## VERSION INFORMATION
-
-### V04 (Current) 
-- Advanced LCA filtering strategies (strict, majority-rule, weighted)
-- OTU collapsing by complete taxonomy
-- Species-level abundance summary (summary.csv)
-- Bug fix: Collapsed OTU use COTU_ prefix (prevents ID collision)
-
-### V03 (Previous)
-- Simple confidence-based filtering
-- No OTU collapsing or species-level aggregation
-- Known issue: OTU naming collision → incorrect species abundances
 
 ## SCRIPT COMPONENTS
 
@@ -302,39 +276,8 @@ The pipeline generates the following output files in the specified output direct
 ## ACKNOWLEDGMENTS
 
 ### Development Tools
-- V04 development benefited from AI-assisted code generation and debugging
-- LCA algorithm implementations and documentation were developed with AI assistance
+- LCA algorithm implementations were developed with AI assistance
 - All code has been reviewed, tested, and validated on mock community data
 
-
-## TROUBLESHOOTING
-
-### Common Issues
-
-**"Using V03 results - species abundances seem wrong"**
-- V03 had an OTU ID collision bug. Always use V04 for accurate species-level analysis.
-- If you have V03 results, re-run with V04 to get correct proportions.
-
-**"summary.csv missing or incomplete"**
-- Verify `collapsed_taxonomy.csv` exists in output directory (created by collapse_otu_by_taxonomy.py)
-- Check that `-G` parameter points to correct collapse_otu_by_taxonomy.py script
-- Ensure output directory uses absolute path, not relative path
-
-**"Wrong LCA strategy applied"**
-- Specify `-L` parameter explicitly: `-L strict`, `-L majority-rule`, or `-L weighted`
-- Default is `strict` if not specified
-- Check pipeline logs to confirm which LCA method was used
-
-**Output directory contains only porechop/ nanofilt/ etc. but no final results**
-- Pipeline may still be running or may have failed after mapping
-- Check for errors in mapping/filtering steps
-- verify all Python scripts are executable: `chmod +x *.py` 
-- Ensure all paths (especially `-o`) use absolute paths
-
-
 ## CITATION
-
-If you use this pipeline, please cite:
-- Original APOGEE: [Latorre-Pérez et al. 2021](https://www.frontiersin.org/journals/microbiology/articles/10.3389/fmicb.2021.768240/full)
-- This version (V04) with modifications and bug fixes
 

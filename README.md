@@ -186,17 +186,6 @@ Alternaria_alternata	101
 Alternaria_arborescens	101
 ```
 
-## Parameter sweep utility
-
-`param_sweep.sh` tests a grid of `-k`, `-v`, `-m`, `-C` values and reports the unclassified rate
-per sample for each combination. It reuses existing PAF files (only re-runs the fast filtering
-steps). Results are written to `/tmp/apogee_param_sweep_<date>.tsv`.
-
-```bash
-# Edit the parameter grids at the top of the script, then:
-bash param_sweep.sh
-```
-
 ## To do
 
 - Replace Porechop (unmaintained) with `dorado trim` for adapter removal.

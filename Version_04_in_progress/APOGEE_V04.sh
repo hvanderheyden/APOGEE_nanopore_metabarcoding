@@ -28,14 +28,15 @@ trap 'echo "ERROR: Script failed at line $LINENO" >&2' EXIT
 # -v 0.85 \
 # -m 450 \
 # -k 0.9 \
-# -L weighted
+# -L weighted \
+# -H 5
 
 #############
 # ARGUMENTS #
 #############
 
 # Parse command-line arguments
-while getopts ":i:o:r:t:c:x:w:T:F:S:C:v:m:k:b:R:P:L:G:" opt; do
+while getopts ":i:o:r:t:c:x:w:T:F:S:C:v:m:k:b:R:P:L:G:H:" opt; do
   case ${opt} in
     i ) input_dir="$OPTARG" ;;
     o ) output_dir="$OPTARG" ;;
@@ -56,6 +57,7 @@ while getopts ":i:o:r:t:c:x:w:T:F:S:C:v:m:k:b:R:P:L:G:" opt; do
     P ) forward_primer="$OPTARG" ;;
     L ) lca_type="$OPTARG" ;;
     G ) collapse_script="$OPTARG" ;;
+    H ) top_species_count="$OPTARG" ;;
     \? ) echo "ERROR: Invalid option: -$OPTARG" 1>&2; exit 1 ;;
     : ) echo "ERROR: Invalid option: -$OPTARG requires an argument" 1>&2; exit 1 ;;
   esac
@@ -115,6 +117,7 @@ identity_threshold="${identity_threshold:-0.9}"
 reverse_primer="${reverse_primer:-}"
 forward_primer="${forward_primer:-}"
 lca_type="${lca_type:-weighted}"
+top_species_count="${top_species_count:-5}"
 
 # Validate numeric parameters
 if ! [[ "${threads}" =~ ^[0-9]+$ ]] || [[ "${threads}" -lt 1 ]]; then
@@ -154,6 +157,12 @@ if ! echo "${valid_lca_types}" | grep -q "${lca_type}"; then
   exit 1
 fi
 
+# Validate top_species_count parameter
+if ! [[ "${top_species_count}" =~ ^[0-9]+$ ]] || [[ "${top_species_count}" -lt 1 ]]; then
+  echo "ERROR: top_species_count must be a positive integer" >&2
+  exit 1
+fi
+
 # Validate trimming parameters
 if [[ "${enable_trimming}" == "true" ]] || [[ "${enable_trimming}" == "True" ]] || [[ "${enable_trimming}" == "TRUE" ]]; then
   if [[ -z "${reverse_primer}" ]] || [[ -z "${forward_primer}" ]]; then
@@ -185,6 +194,7 @@ echo "Query coverage:      ${qcov}"
 echo "Min query length:    ${min_qlen} bp"
 echo "Identity threshold:  ${identity_threshold}"
 echo "LCA type:            ${lca_type}"
+echo "Top species count:   ${top_species_count} per sample"
 echo "==============================================="
 echo ""
 
@@ -509,7 +519,7 @@ else
         echo "► Step 8c: Creating summary table from collapsed OTU"
     fi
     echo "  Script: ${taxonomy_script}"
-    echo "  Parameters: -C ${confidence} -v ${qcov} -m ${min_qlen} -k ${identity_threshold}"
+    echo "  Parameters: -C ${confidence} -v ${qcov} -m ${min_qlen} -k ${identity_threshold} -H ${top_species_count}"
     
     # Use collapsed OTU table for species proportions
     if [[ ! -f "${output_dir}/collapsed_otu_table.csv" ]]; then
@@ -517,7 +527,7 @@ else
       exit 1
     fi
     
-    "${taxonomy_script}" -i "${output_dir}/collapsed_otu_table.csv" -T "${taxonomy_db}" -C "${confidence}" -v "${qcov}" -m "${min_qlen}" -k "${identity_threshold}" > "${output_dir}/summary.csv" || { echo "ERROR: Summary table creation failed" >&2; exit 1; }
+    "${taxonomy_script}" -i "${output_dir}/collapsed_otu_table.csv" -T "${taxonomy_db}" -C "${confidence}" -v "${qcov}" -m "${min_qlen}" -k "${identity_threshold}" -H "${top_species_count}" > "${output_dir}/summary.csv" || { echo "ERROR: Summary table creation failed" >&2; exit 1; }
     echo "  ✓ Summary table created: ${output_dir}/summary.csv"
 fi
 echo ""

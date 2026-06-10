@@ -7,7 +7,7 @@ import sys
 import os
 from pathlib import Path
 
-def generate_proportions(otu_file, tax_file, output_file=None, sep='\t'):
+def generate_proportions(otu_file, tax_file, output_file=None, sep='\t', top_species_count=5):
     """
     Generate species proportions file from OTU and taxonomy tables
     
@@ -16,6 +16,7 @@ def generate_proportions(otu_file, tax_file, output_file=None, sep='\t'):
     - tax_file: Taxonomy database TSV (QIIME format - legacy, may not be used)
     - output_file: Output proportions file (None = stdout)
     - sep: Separator char (not used - format auto-detected)
+    - top_species_count: Number of top species to keep per sample (default 5)
     
     NOTE: This function looks first for a phyloseq_taxonomy file from filter_with_advanced_lca
     which contains pre-computed species assignments organized by rank.
@@ -106,19 +107,36 @@ def generate_proportions(otu_file, tax_file, output_file=None, sep='\t'):
     for col in sample_cols:
         proportions[f'{col}_pct'] = 100 * grouped[col] / totals[col]
     
-    # Build output: Species | Mock_Reads | Mock_Percentage | etc
-    output = pd.DataFrame()
-    output['Species'] = grouped.index
+    # Build output per sample: top N species per sample
+    output_rows = []
     
     for col in sample_cols:
-        # Rename column to match output format
         col_name = col.replace('-nanofilt', '').upper()
-        output[f'{col_name}_Reads'] = grouped[col].values
-        output[f'{col_name}_Percentage'] = proportions[f'{col}_pct'].values
+        
+        # Get species and their reads/percentages for this sample
+        sample_data = pd.DataFrame({
+            'Species': grouped.index,
+            'Reads': grouped[col].values,
+            'Percentage': proportions[f'{col}_pct'].values
+        })
+        
+        # Sort and keep top N species (default 5)
+        sample_data = sample_data.sort_values('Reads', ascending=False).head(top_species_count)
+        
+        # Add sample column
+        sample_data['Sample'] = col_name
+        
+        output_rows.append(sample_data)
     
-    # Sort by total reads descending
-    total_reads = output[[c for c in output.columns if 'Reads' in c]].sum(axis=1)
-    output = output.iloc[total_reads.argsort()[::-1]]
+    # Combine all samples
+    output = pd.concat(output_rows, ignore_index=True)
+    
+    # Reorder columns: Sample | Species | Reads | Percentage
+    output = output[['Sample', 'Species', 'Reads', 'Percentage']]
+    
+    # Round percentage to 2 decimals
+    output['Percentage'] = output['Percentage'].round(2)
+    output['Reads'] = output['Reads'].astype(int)
     
     # Save or print to stdout
     if output_file:
@@ -129,18 +147,13 @@ def generate_proportions(otu_file, tax_file, output_file=None, sep='\t'):
         output.to_csv(sys.stdout, index=False)
     
     # Print summary
-    print(f"\nSummary:", file=sys.stderr)
+    print(f"\nTop {top_species_count} species per sample:", file=sys.stderr)
     for col in sample_cols:
         col_name = col.replace('-nanofilt', '').upper()
-        total = output[f'{col_name}_Reads'].sum()
-        unclass = output[output['Species'] == 'unclassified'][f'{col_name}_Reads'].values
-        unclass_pct = output[output['Species'] == 'unclassified'][f'{col_name}_Percentage'].values
-        
-        print(f"  {col}:", file=sys.stderr)
-        print(f"    Total reads: {int(total):,d}", file=sys.stderr)
-        if len(unclass) > 0:
-            print(f"    Unclassified: {int(unclass[0]):,d} ({unclass_pct[0]:.1f}%)", file=sys.stderr)
-        print(f"    Species count: {len(output[output['Species'] != 'unclassified'])}", file=sys.stderr)
+        sample_rows = output[output['Sample'] == col_name]
+        print(f"  {col_name}:", file=sys.stderr)
+        for idx, row in sample_rows.iterrows():
+            print(f"    {row['Species']}: {int(row['Reads']):,d} reads ({row['Percentage']:.2f}%)", file=sys.stderr)
     
     return output
 
@@ -155,11 +168,13 @@ if __name__ == '__main__':
     parser.add_argument('-v', '--qcov', type=float, default=0.85, help='Query coverage (not used, for compatibility)')
     parser.add_argument('-m', '--min-qlen', type=int, default=0, help='Min query length (not used, for compatibility)')
     parser.add_argument('-k', '--identity', type=float, default=0.9, help='Identity threshold (not used, for compatibility)')
+    parser.add_argument('-H', '--top-species', type=int, default=5, help='Number of top species to include per sample (default 5)')
     
     args = parser.parse_args()
     
     otu_file = args.otu_file
     tax_file = args.tax_file
     output_file = args.output
+    top_species_count = args.top_species
     
-    generate_proportions(otu_file, tax_file, output_file)
+    generate_proportions(otu_file, tax_file, output_file, top_species_count=top_species_count)

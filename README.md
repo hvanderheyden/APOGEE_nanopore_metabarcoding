@@ -35,13 +35,13 @@ git clone https://github.com/hvanderheyden/APOGEE_nanopore_metabarcoding
 
 2. Create the conda environment:
 ```bash
-conda env create -f Version_05/APOGEE_V05.yml
+conda env create -f APOGEE_V05.yml
 conda activate Apogee-pipeline-v05
 ```
 
 3. Make the script executable:
 ```bash
-chmod +x Version_05/APOGEE_V05.sh
+chmod +x APOGEE_V05.sh
 ```
 
 ## Usage
@@ -168,23 +168,25 @@ chmod +x Version_05/APOGEE_V05.sh
 
 ## Species clusters file format
 
-The species clusters TSV (`-K`) has no header and two columns:
+The species clusters TSV (`-K`) has a comment header (lines starting with `#`) and five tab-separated columns:
 
 ```
-<species_name>\t<cluster_id>
+ClusterNum<TAB>SpeciesA<TAB>SpeciesB<TAB>ClusterName<TAB>Genus
 ```
 
-Species sharing the same `cluster_id` integer are merged. The cluster name used in the output
-is the species name of the representative (first encountered) member.
+Each row defines a **pairwise relationship** between two species that belong to the same cluster. All species sharing the same `ClusterNum` are merged into a single cluster OTU after LCA assignment. The `ClusterName` column gives the display name used in the output.
 
 Example:
 ```
-Botrytis_cinerea	1
-Botrytis_pseudocinerea	1
-Botrytis_cinerea_var_cinerea	1
-Alternaria_alternata	101
-Alternaria_arborescens	101
+# Species Clustering Database for APOGEE V05
+# Format: ClusterNum<TAB>SpeciesA<TAB>SpeciesB<TAB>ClusterName<TAB>Genus
+1	Botrytis_cinerea	Botrytis_pseudocinerea	Botrytis_cinerea_cluster	Botrytis
+1	Botrytis_cinerea	Botrytis_cinerea_var_cinerea	Botrytis_cinerea_cluster	Botrytis
+1	Botrytis_pseudocinerea	Botrytis_cinerea_var_cinerea	Botrytis_cinerea_cluster	Botrytis
+2	Alternaria_alternata	Alternaria_arborescens	Alternaria_alternata_cluster	Alternaria
 ```
+
+Note: for a cluster of N species, there are N×(N-1)/2 rows (all pairs).
 
 ## To do
 
